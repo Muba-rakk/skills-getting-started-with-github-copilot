@@ -3,49 +3,57 @@
 
 def test_get_activities_returns_all_activities(client):
     """Test that GET /activities returns all available activities"""
-    response = client.get("/activities")
+    # Arrange
+    expected_activities = ["Chess Club", "Programming Class", "Soccer Team", "Art Studio"]
     
-    assert response.status_code == 200
+    # Act
+    response = client.get("/activities")
     data = response.json()
     
-    # Verify all activities are present
-    assert "Chess Club" in data
-    assert "Programming Class" in data
-    assert "Soccer Team" in data
-    assert "Art Studio" in data
+    # Assert
+    assert response.status_code == 200
+    for activity_name in expected_activities:
+        assert activity_name in data
 
 
 def test_get_activities_response_structure(client):
     """Test that activity data has the correct structure"""
+    # Arrange
+    required_fields = ["description", "schedule", "max_participants", "participants"]
+    expected_types = {
+        "description": str,
+        "schedule": str,
+        "max_participants": int,
+        "participants": list
+    }
+    
+    # Act
     response = client.get("/activities")
     data = response.json()
-    
     activity = data["Chess Club"]
     
-    # Verify required fields
-    assert "description" in activity
-    assert "schedule" in activity
-    assert "max_participants" in activity
-    assert "participants" in activity
-    
-    # Verify field types
-    assert isinstance(activity["description"], str)
-    assert isinstance(activity["schedule"], str)
-    assert isinstance(activity["max_participants"], int)
-    assert isinstance(activity["participants"], list)
+    # Assert
+    for field in required_fields:
+        assert field in activity
+    for field, expected_type in expected_types.items():
+        assert isinstance(activity[field], expected_type)
 
 
 def test_get_activities_includes_participants(client):
     """Test that activities include their participant lists"""
+    # Arrange
+    chess_club_participants = ["michael@mergington.edu", "daniel@mergington.edu"]
+    programming_participants = ["emma@mergington.edu", "sophia@mergington.edu"]
+    
+    # Act
     response = client.get("/activities")
     data = response.json()
     
-    # Chess Club has 2 participants
+    # Assert
     assert len(data["Chess Club"]["participants"]) == 2
-    assert "michael@mergington.edu" in data["Chess Club"]["participants"]
-    assert "daniel@mergington.edu" in data["Chess Club"]["participants"]
+    for participant in chess_club_participants:
+        assert participant in data["Chess Club"]["participants"]
     
-    # Programming Class has 2 participants
     assert len(data["Programming Class"]["participants"]) == 2
-    assert "emma@mergington.edu" in data["Programming Class"]["participants"]
-    assert "sophia@mergington.edu" in data["Programming Class"]["participants"]
+    for participant in programming_participants:
+        assert participant in data["Programming Class"]["participants"]
